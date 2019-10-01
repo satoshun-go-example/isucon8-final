@@ -36,6 +36,38 @@ func scanCandlestickData(rows *sql.Rows, err error) (*CandlestickData, error) {
 	return nil, sql.ErrNoRows
 }
 
+func scanOrders2(rows *sql.Rows, e error) (orders []*Order, err error) {
+	if e != nil {
+		return nil, e
+	}
+	defer func() {
+		err = rows.Close()
+	}()
+	orders = []*Order{}
+	for rows.Next() {
+		var v Order
+		var u User
+		v.User = &u
+
+		var closedAt mysql.NullTime
+		var tradeID sql.NullInt64
+		if err = rows.Scan(&v.ID, &v.Type, &v.UserID, &v.Amount, &v.Price, &closedAt, &tradeID, &v.CreatedAt,
+			&v.User.ID, &v.User.BankID, &v.User.Name, &v.User.Password, &v.User.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		if closedAt.Valid {
+			v.ClosedAt = &closedAt.Time
+		}
+		if tradeID.Valid {
+			v.TradeID = tradeID.Int64
+		}
+		orders = append(orders, &v)
+	}
+	err = rows.Err()
+	return
+}
+
 func scanOrders(rows *sql.Rows, e error) (orders []*Order, err error) {
 	if e != nil {
 		return nil, e

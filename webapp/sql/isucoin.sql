@@ -27,6 +27,8 @@ CREATE TABLE orders (
     created_at DATETIME(6) NOT NULL,
     INDEX type_closed_at_idx(type, closed_at),
     INDEX user_id_idx(user_id),
+    INDEX closed_at_idx(closed_at),
+    INDEX trade_id_idx(trade_id),
     PRIMARY KEY (id, created_at)
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4;
 

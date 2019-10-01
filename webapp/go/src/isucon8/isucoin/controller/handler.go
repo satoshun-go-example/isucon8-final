@@ -273,7 +273,7 @@ func (h *Handler) GetOrders(w http.ResponseWriter, r *http.Request, _ httprouter
 		return
 	}
 	for _, order := range orders {
-		if err = model.FetchOrderRelation(h.db, order); err != nil {
+		if err = model.FetchOrderRelation2(h.db, order); err != nil {
 			h.handleError(w, err, 500)
 			return
 		}

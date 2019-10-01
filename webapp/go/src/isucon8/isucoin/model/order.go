@@ -28,7 +28,13 @@ type Order struct {
 }
 
 func GetOrdersByUserID(d QueryExecutor, userID int64) ([]*Order, error) {
-	return scanOrders(d.Query("SELECT * FROM orders WHERE user_id = ? AND (closed_at IS NULL OR trade_id IS NOT NULL) ORDER BY created_at ASC", userID))
+	return scanOrders2(d.Query(`
+SELECT orders.*, user.id as user_user_id, user.bank_id, user.name as user_name, user.password, user.created_at as user_created_at FROM orders 
+ INNER JOIN user ON user.id = orders.user_id
+ WHERE 
+	orders.user_id = ? AND 
+ 	(orders.closed_at IS NULL OR orders.trade_id IS NOT NULL) 
+	ORDER BY orders.created_at ASC`, userID))
 }
 
 func GetOrdersByUserIDAndLastTradeId(d QueryExecutor, userID int64, tradeID int64) ([]*Order, error) {
@@ -72,6 +78,17 @@ func FetchOrderRelation(d QueryExecutor, order *Order) error {
 	if err != nil {
 		return errors.Wrapf(err, "GetUserByID failed. id")
 	}
+	if order.TradeID > 0 {
+		order.Trade, err = GetTradeByID(d, order.TradeID)
+		if err != nil {
+			return errors.Wrapf(err, "GetTradeByID failed. id")
+		}
+	}
+	return nil
+}
+
+func FetchOrderRelation2(d QueryExecutor, order *Order) error {
+	var err error
 	if order.TradeID > 0 {
 		order.Trade, err = GetTradeByID(d, order.TradeID)
 		if err != nil {
